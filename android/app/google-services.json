@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1095826886033",
+    "firebase_url": "https://zerowastepantry-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "zerowastepantry",
+    "storage_bucket": "zerowastepantry.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095826886033:android:f7e499e1e2910613661e30",
+        "android_client_info": {
+          "package_name": "com.example.zerowastepantry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1QBCqFcHj61YiylxK1pQxO9W9ZuTou30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
