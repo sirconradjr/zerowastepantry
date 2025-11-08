@@ -21,6 +21,9 @@ class ZeroWastePantryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFFFFA500),
+        textTheme: Theme.of(context).textTheme.apply(
+              fontFamily: 'Poppins',
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFFFFA500),
           brightness: Brightness.light,

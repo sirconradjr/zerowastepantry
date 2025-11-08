@@ -13,7 +13,20 @@
           "package_name": "com.example.zerowastepantry"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1095826886033-6ctbub4qamr4h07vsest0rtag05q5477.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.zerowastepantry",
+            "certificate_hash": "7098c4e95a992f027764e39fa25ae80b4703c54d"
+          }
+        },
+        {
+          "client_id": "1095826886033-nrrevovf8948jot4jg7luegtknpccmhq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA1QBCqFcHj61YiylxK1pQxO9W9ZuTou30"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1095826886033-nrrevovf8948jot4jg7luegtknpccmhq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1095826886033-65q7gm8769jik54ivg8r97vsgs0bpn09.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.zerowastepantry"
+              }
+            }
+          ]
         }
       }
     }
