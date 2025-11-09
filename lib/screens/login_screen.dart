@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 
@@ -17,20 +18,52 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  void _showError(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.scale,
+      title: 'Login Failed',
+      desc: message,
+      btnOkOnPress: () {},
+    ).show();
+  }
+
+  void _showSuccess(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      title: 'Success',
+      desc: message,
+      btnOkOnPress: () {},
+    ).show();
+  }
 
   Future<void> _signInWithEmail() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showError("Please fill in all fields.");
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      _showSuccess("Welcome back!");
+      await Future.delayed(const Duration(seconds: 1));
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? "Login failed");
+      _showError(e.message ?? "Login failed. Please try again.");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -38,22 +71,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<User?> _signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null;
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email'],
+      );
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null; // User cancelled login
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
+      final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
       );
 
-      UserCredential userCredential =
+      final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
+
+      _showSuccess("Signed in successfully with Google!");
+      await Future.delayed(const Duration(seconds: 1));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+
       return userCredential.user;
     } catch (e) {
-      print("Google Sign-In Error: $e");
+      _showError("Google Sign-In failed: $e");
       return null;
     }
   }
@@ -66,18 +112,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password reset email sent!")),
-      );
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.info,
+        animType: AnimType.scale,
+        title: 'Email Sent',
+        desc: 'Check your inbox to reset your password.',
+        btnOkOnPress: () {},
+      ).show();
     } catch (e) {
       _showError("Error sending password reset email: $e");
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
@@ -93,10 +138,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/zerowaste_logo.png',
-                  height: size.height * 0.25,
-                ),
+                Image.asset('assets/images/zerowaste_logo.png',
+                    height: size.height * 0.25),
                 const SizedBox(height: 10),
                 Text(
                   "Welcome Back!",
@@ -108,9 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Email
                 TextField(
                   controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: "Email",
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -121,33 +164,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password
                 TextField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: "Password",
                     prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-
-                // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: _resetPassword,
-                    child: const Text(
-                      "Forgot Password?",
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    child: const Text("Forgot Password?",
+                        style: TextStyle(color: Colors.grey)),
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -161,41 +205,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "Login",
+                        : const Text("Login",
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Google Sign In
+                // Google Sign-In Button
                 OutlinedButton.icon(
-                  onPressed: () async {
-                    final user = await _signInWithGoogle();
-                    if (user != null) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomeScreen()),
-                      );
-                    } else {
-                      _showError("Google sign-in failed.");
-                    }
-                  },
-                  icon: Image.asset(
-                    'assets/images/google.png',
-                    height: 20,
-                  ),
-                  label: const Text("Sign in with Google"),
+                  onPressed: _signInWithGoogle,
+                  icon: Image.asset('assets/images/google.png', height: 20),
+                  label: const Text('Sign In with Google'),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
 
-                // Register Redirect
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

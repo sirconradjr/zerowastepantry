@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -15,35 +16,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isLoading = false;
 
+  void _showDialog(String title, String message, DialogType type) {
+    AwesomeDialog(
+      context: context,
+      dialogType: type,
+      animType: AnimType.scale,
+      title: title,
+      desc: message,
+      btnOkOnPress: () {},
+    ).show();
+  }
+
   Future<void> _registerWithEmailPassword() async {
-    if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
+    if (_emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      _showDialog('Error', 'Please fill in all fields.', DialogType.error);
+      return;
+    }
+
+    if (_passwordController.text.trim() !=
+        _confirmPasswordController.text.trim()) {
+      _showDialog('Error', 'Passwords do not match.', DialogType.error);
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful!')),
-      );
+      _showDialog('Success', 'Registration successful!', DialogType.success);
+      await Future.delayed(const Duration(seconds: 1));
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Registration failed')),
-      );
+      _showDialog('Error', e.message ?? 'Registration failed', DialogType.error);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -51,30 +67,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _signUpWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
       );
 
       await _auth.signInWithCredential(credential);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google Sign-Up successful!')),
-      );
+      _showDialog('Success', 'Google Sign-Up successful!', DialogType.success);
+      await Future.delayed(const Duration(seconds: 1));
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Sign-Up failed: $e')),
-      );
+      _showDialog('Error', 'Google Sign-Up failed: $e', DialogType.error);
     }
   }
 
@@ -90,18 +105,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: size.height * 0.12),
-            Image.asset('assets/images/zerowaste_logo.png', height: size.height * 0.18),
+            Image.asset('assets/images/zerowaste_logo.png',
+                height: size.height * 0.18),
             const SizedBox(height: 20),
             Text(
               'Create an Account',
               style: GoogleFonts.poppins(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
+                color: Colors.orange,
               ),
             ),
             const SizedBox(height: 30),
 
-            // Email Field
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -111,7 +127,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 15),
 
-            // Password Field
             TextField(
               controller: _passwordController,
               obscureText: true,
@@ -122,7 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 15),
 
-            // Confirm Password Field
             TextField(
               controller: _confirmPasswordController,
               obscureText: true,
@@ -133,7 +147,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 25),
 
-            // Register Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -150,7 +163,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 15),
 
-            // OR Divider
             Row(
               children: const [
                 Expanded(child: Divider(thickness: 1)),
@@ -163,7 +175,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 15),
 
-            // Google Sign-Up Button
             OutlinedButton.icon(
               onPressed: _signUpWithGoogle,
               icon: Image.asset('assets/images/google.png', height: 20),
@@ -171,7 +182,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Already have an account? Login
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -179,7 +189,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                   ),
                   child: const Text(
                     'Login',
