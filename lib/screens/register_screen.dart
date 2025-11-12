@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -54,14 +55,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showDialog('Success', 'Registration successful!', DialogType.success);
       await Future.delayed(const Duration(seconds: 1));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } on FirebaseAuthException catch (e) {
       _showDialog('Error', e.message ?? 'Registration failed', DialogType.error);
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -84,10 +88,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showDialog('Success', 'Google Sign-Up successful!', DialogType.success);
       await Future.delayed(const Duration(seconds: 1));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } catch (e) {
       _showDialog('Error', 'Google Sign-Up failed: $e', DialogType.error);
     }

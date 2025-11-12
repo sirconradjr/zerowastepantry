@@ -58,14 +58,17 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSuccess("Welcome back!");
       await Future.delayed(const Duration(seconds: 1));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } on FirebaseAuthException catch (e) {
       _showError(e.message ?? "Login failed. Please try again.");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -92,10 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSuccess("Signed in successfully with Google!");
       await Future.delayed(const Duration(seconds: 1));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false, // Remove all previous routes
+        );
+      }
 
       return userCredential.user;
     } catch (e) {
